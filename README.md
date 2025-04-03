@@ -1,2 +1,2 @@
-# Automated-Quality-Check
-Automated Quality Check
+# QC-Check
+Duda Website SEO Automation Checking
