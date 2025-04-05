@@ -1,4 +1,3 @@
-// filepath: c:\Users\Don Diaz\Documents\QC-Check-main\scripts\sidepanel.js
 const port = chrome.runtime.connect({ name: "sidepanel" });
 
 // Listen for messages from the background script
@@ -9,9 +8,39 @@ port.onMessage.addListener((message) => {
 
         // Populate the list with link data
         message.data.forEach((item) => {
-            const listItem = document.createElement("li");
-            listItem.textContent = `Slug: ${item.Slug}, URL: ${item.Url}`;
-            linkDataList.appendChild(listItem);
+            linkDataList.innerHTML += `
+                <button class="accordion">
+                    <h4>${item.Slug}</h4>
+                </button>
+                <div class="panel">
+                    <p><strong>URL :</strong> ${item.Url}</p>
+                    <p><strong>Broken Links :</strong> ${item.Broken_links || 0}</p>
+                </div>
+            `;
         });
+
+        // Reinitialize accordion functionality for dynamically created elements
+        initializeAccordion();
     }
 });
+
+function initializeAccordion() {
+    const acc = document.getElementsByClassName("accordion");
+    for (let i = 0; i < acc.length; i++) {
+        acc[i].addEventListener("click", function () {
+            // Toggle between adding and removing the "active" class
+            this.classList.toggle("active");
+
+            // Toggle between hiding and showing the active panel
+            const panel = this.nextElementSibling;
+            if (panel.style.display === "block") {
+                panel.style.display = "none";
+            } else {
+                panel.style.display = "block";
+            }
+        });
+    }
+}
+
+// Initialize accordion functionality on page load (if any accordion elements exist)
+initializeAccordion();

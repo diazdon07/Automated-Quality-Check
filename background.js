@@ -1,24 +1,8 @@
-const DUDA_BASE_URL = 'https://webbuilder.localsearch.com.au/site';
 let linkDataFromContent = [];
 
-chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
-    if (!tab.url) return;
-    const url = new URL(tab.url);
-    // Enable the side panel when the URL starts with DUDA_BASE_URL
-    if (url.href.startsWith(DUDA_BASE_URL)) {
-        await chrome.sidePanel.setOptions({
-            tabId,
-            path: '/html/sidepanel.html',
-            enabled: true
-        });
-    } else {
-        // Disable the side panel on all other sites
-        await chrome.sidePanel.setOptions({
-            tabId,
-            enabled: false
-        });
-    }
-});
+chrome.sidePanel
+  .setPanelBehavior({ openPanelOnActionClick: true })
+  .catch((error) => console.error(error));
 
 // Listen for messages from the content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
