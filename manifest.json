@@ -7,7 +7,7 @@
     "default_title": "Automated Quality Check" 
   },
   "options_ui":{
-    "page" : "/html/settings.html",
+    "page" : "/settings/index.html",
     "open_in_tab" : true
   },
   "content_security_policy": {
@@ -18,8 +18,17 @@
     "storage",
     "sidePanel"
   ],
+  "commands": {
+    "toggle_newTab": {
+      "suggested_key": {
+        "default": "Alt+Shift+Q",
+        "mac": "Command+Shift+Q"
+      },
+      "description": "QC Information"
+    }
+  },
   "side_panel": {
-    "default_path": "/html/sidepanel.html"
+    "default_path": "/html/checklist.html"
   },
   "background": {
     "service_worker": "background.js",
