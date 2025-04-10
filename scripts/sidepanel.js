@@ -1,13 +1,41 @@
 const port = chrome.runtime.connect({ name: "sidepanel" });
 
+// Add a loading overlay to the DOM
+const loadingOverlay = document.createElement('div');
+loadingOverlay.id = 'loadingOverlay';
+loadingOverlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5em;
+    z-index: 9999;
+    display: none; /* Hidden by default */
+`;
+loadingOverlay.textContent = 'Loading...';
+document.body.appendChild(loadingOverlay);
+
+// Function to show/hide the loading overlay
+function toggleLoadingOverlay(show) {
+    loadingOverlay.style.display = show ? 'flex' : 'none';
+}
+
 // Listen for messages from the background script
 port.onMessage.addListener((message) => {
     if (message.action === "updateLinkData") {
+        toggleLoadingOverlay(true); // Show loading overlay
+
         const linkDataList = document.getElementById("linkDataList");
         linkDataList.innerHTML = ""; // Clear existing data
 
         // Populate the list with link data
-        message.data.forEach((item) => {
+        Promise.all(message.data.map(async (item) => {
             const getSupportingImages = Array.isArray(item.SupportingImage) && item.SupportingImage.length > 0
                 ? Promise.all(item.SupportingImage.map(async (entry) => {
                     const url = entry.find(obj => obj && obj.Url)?.Url || ''; // Ensure object exists before accessing Url
@@ -24,40 +52,48 @@ port.onMessage.addListener((message) => {
                         sizeElemet = `<p style="color: #4CAF50;">${sizeText}</p>`;
                     }
 
-                    return `<div style="display:inline-block; text-align:center; width: 50%;">
+                    return `<div style="display:inline-block; text-align:center; width: 20%; background: white; border-radius: 12px; box-shadow: 8px 8px 16px #bebebe, -8px -8px 16px #ffffff; padding: 10px;">
                                 <img src="${url}" style="width: 100px; height: auto; margin: 5px;">
                                 ${sizeElemet}
                                 <p>${alt}</p>
                             </div>`;
                 }))
                 : Promise.resolve('<p>No supporting images available</p>'); // Fallback if no images
-
-            getSupportingImages.then((imagesHtml) => {
-                linkDataList.innerHTML += `
-                    <button class="accordion">
-                        <h4>${item.Slug}</h4>
-                    </button>
-                    <div class="panel">
-                        <p><strong>Meta Title :</strong> ${item.Meta_Title}</p>
-                        <p><strong>Meta Description :</strong> ${item.Meta_Description || 'N/A'}</p>
-                        <p><strong>URL :</strong> ${item.Url || 'N/A'}</p>
-                        <p><strong>Broken Links :</strong> ${item.Broken_links || 0}</p>
-                        <div style="display: flex; flex-wrap: wrap;">${imagesHtml.join('')}</div>
+            // note add banner image
+            const imagesHtml = await getSupportingImages;
+            linkDataList.innerHTML += `
+                <button class="accordion">
+                    <h3>${item.Slug}</h3>
+                </button>
+                <div class="panel">
+                    <p><strong>Meta Title :</strong> ${item.Meta_Title}</p>
+                    <p><strong>Meta Description :</strong> ${item.Meta_Description || 'N/A'}</p>
+                    <p><strong>URL :</strong> ${item.Url || 'N/A'}</p>
+                    <p><strong>Broken Links :</strong> ${item.BrokenLinks || 0}</p>
+                    <div class="tab-buttons">
+                        <button data-tab="tab1">Supporting Image</button>
+                        <button data-tab="tab2">Banner Images</button>
+                        <button data-tab="tab3">Icons</button>
                     </div>
-                `;
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0px; justify-content: center; align-content: center;">${imagesHtml.join('')}</div>
+                </div>
+            `;
+        })).then(() => {
+            // Update counter
+            const imageCount = document.querySelectorAll('#linkDataList img').length;
+            const counter = document.getElementById('imageCounter');
+            if (counter) {
+                counter.textContent = `Scanned Images: ${imageCount}`;
+            }
 
-                // Update counter
-                const imageCount = document.querySelectorAll('#linkDataList img').length;
-                const counter = document.getElementById('imageCounter');
-                if (counter) {
-                    counter.textContent = `Scanned Images: ${imageCount}`;
-                }
+            // Reinitialize accordion functionality for newly added elements
+            initializeAccordion();
 
-                // Reinitialize accordion functionality for newly added elements
-                initializeAccordion();
-            });
+            toggleLoadingOverlay(false); // Hide loading overlay
+        }).catch((error) => {
+            console.error('Error processing data:', error);
+            toggleLoadingOverlay(false); // Hide loading overlay on error
         });
-
     }
 });
 
@@ -110,3 +146,4 @@ function initializeAccordion() {
 
 // Reinitialize accordion functionality for dynamically created elements
 initializeAccordion();
+
