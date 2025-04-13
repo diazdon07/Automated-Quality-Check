@@ -87,6 +87,10 @@ if(site.includes("webbuilder.localsearch.com.au")){
                             await docsCheck(data, doc)
                                 .then(() => getPerPageImage(data, doc))
                                 .then(() => getSVGImage(data, doc))
+                                .then(() => getHeaderType(data, doc)) 
+                                .then(() => checkAccordion(data, doc))
+                                .then(() => getContactForm(data, doc))        
+                                .then(() => getFooterType(data, doc))             
                                 .catch((error) => {
                                     logDebug('error', `Error in docsCheck for page ${data.Slug}:`, error);
                                 });
@@ -99,6 +103,7 @@ if(site.includes("webbuilder.localsearch.com.au")){
         
                 logDebug('log', "All data processed. Sending link data to background...");
                 await sendLinkDataToBackground();
+                console.log("Link data sent to background:", linkData);
         
             } catch (error) {
                 logDebug('error', "Error in processLinks function:", error);
@@ -192,49 +197,9 @@ if(site.includes("webbuilder.localsearch.com.au")){
         
         async function getPerPageImage(data, doc) {
             try {
-                const linkTags = doc.querySelectorAll('link[rel="stylesheet"]');
-                const styleTag = document.getElementById('pagestyle');  // Capture inline <style> tag
-                const cssPromises = [];
-        
-                // Initialize BannerImage if not already set
                 data.BannerImage = data.BannerImage || [];
                 data.SupportingImage = data.SupportingImage || [];
-        
-                // Loop through the link tags to fetch the CSS
-                for (const link of linkTags) {
-                    const cssUrl = link.href;
-                    cssPromises.push(
-                        fetch(cssUrl, { mode: 'no-cors' })
-                            .then(cssRes => {
-                                if (cssRes.ok) {
-                                    logDebug('log', `Successfully fetched CSS from: ${cssUrl}`);
-                                } else {
-                                    logDebug('warn', `Failed to fetch CSS from: ${cssUrl} (Status: ${cssRes.status})`);
-                                }
-                            })
-                            .catch(error => {
-                                logDebug('warn', `Error fetching CSS from: ${cssUrl}`, error);
-                            })
-                    );
-                }
-        
-                // Handle <style> tag if it exists
-                if (styleTag) {
-                    const styleContent = styleTag.textContent || styleTag.innerText;
-                    const regex = /background-image\s*:\s*url\((['"]?)(.*?)\1\)/g;
-                    let match;
-                    while ((match = regex.exec(styleContent)) !== null) {
-                        const imageUrl = match[2];
-                        logDebug('log', 'Found image URL in <style>:', imageUrl);
-                        data.BannerImage.push(imageUrl);  // Add the image URL to BannerImage array
-                    }
-                } else {
-                    logDebug('warn', "No <style> tag with id 'pagestyle' found.");
-                }
-        
-                // Wait for all CSS files to be fetched
-                await Promise.all(cssPromises);
-        
+                
                 // Wait for images to load if they are dynamically injected (e.g., lazy loading)
                 await delay(1000);  // Adjust delay time as needed
         
@@ -265,18 +230,119 @@ if(site.includes("webbuilder.localsearch.com.au")){
                 const svgImage = await Promise.all(svgImages.map((svg, index) => {
                     const svgContent = svg.outerHTML;
                     const titleElement = svg.querySelector('title');
-                    const title = titleElement ? titleElement.textContent : 'No title available';
-                    return {
-                        [`SVG_image${index + 1}`]: [
-                            { Url: svgContent },
-                            { Alt: title }
-                        ]
-                    };
+                    const title = titleElement ? titleElement.textContent : 'No Alt Text';
+                    return [{ Svg: svgContent },{ Alt: title }];
                 }));
                 data.SVGImage = svgImage;
                 
             } catch (error) {
                 logDebug('error', `Error in getSVGImage for page ${data.Slug}:`, error);
+            }
+        }
+
+        async function getHeaderType(data, doc) {
+            try {
+                const scriptTags = Array.from(doc.querySelectorAll('script'));
+                const containsDeleteElements = scriptTags.some(script => script.textContent.includes('deleteElements()'));
+                const headersType = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+
+                const headerData = headersType.flatMap(header => 
+                    Array.from(doc.querySelectorAll(header))
+                        .map(element => {
+                            if (containsDeleteElements && header === 'h3' && element.textContent.trim() === '') {
+                                return null;
+                            }
+                            return {
+                                type: header,
+                                text: element.textContent.trim()
+                            };
+                        })
+                        .filter(Boolean)
+                );
+
+                data.header = headerData;
+
+            } catch (error) {
+                logDebug('error', `Error in getHeaderType for page ${data.Slug}:`, error);
+            }
+        }
+
+        async function checkAccordion(data, doc) {
+            try {
+                const accordionContainers = Array.from(doc.querySelectorAll('[data-grab="accordion-container"]'));
+                const headersType = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+                const headerData = accordionContainers.flatMap(container =>
+                    headersType.flatMap(header =>
+                        Array.from(container.querySelectorAll(header))
+                            .map(element => ({
+                                type: header,
+                                text: element.textContent.trim()
+                            }))
+                            .filter(Boolean)
+                    )
+                );
+                data.accordion = headerData;
+            } catch (error) {
+                logDebug('error', `Error in Accordion for page ${data.Slug}:`, error);
+            }
+        }
+
+        async function getFooterType(data, doc) {
+            try {
+                const footerContainers = Array.from(doc.getElementsByClassName('dmFooterContainer'));
+                const headersType = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+                const headerData = footerContainers.flatMap(container =>
+                    headersType.flatMap(header =>
+                        Array.from(container.querySelectorAll(header)).map(element => ({
+                            type: header,
+                            text: element.textContent.trim()
+                        }))
+                    )
+                );
+                data.footer = headerData;
+            } catch (error) {
+                logDebug('error', `Error in Footer for page ${data.Slug}:`, error);
+            }
+        }
+        
+        async function getContactForm(data, doc) {
+            try {
+                const dmform = Array.from(doc.querySelectorAll('.dmform'));
+
+                if (dmform.length === 0) {
+                    data.contactForm = "No Contact Form";
+                    return;
+                } else {
+                    const formData = dmform.map(form => {
+                        const autoReplayInput = form.querySelector('input[name="dmformautoreplyenabled"]');
+                        const connectToData = form.getAttribute('data-binding');
+                        const captchaPosition = form.getAttribute('data-captcha-position');
+                        const emailSubjectLine = form.querySelector('input[name="dmformsubject"]');
+                        const fromName = form.querySelector('input[name="dmformfrom"]');
+                        const successDiv = form.querySelector(".dmform-success");
+    
+                        const fc = connectToData ? "Good" : "Not Connected To Data";
+                        const ar = autoReplayInput && autoReplayInput.value === "true" ? "Enabled" : "Disabled";
+                        const subjectLine = emailSubjectLine?.value?.trim() || "Empty";
+                        const from = fromName?.value?.trim() || "Empty";
+                        const captchaStatus = captchaPosition;
+                        const Message = successDiv.innerHTML.trim()
+    
+                        return {
+                            Connect_To_Data: fc,
+                            Auto_replay: ar,
+                            Email_Subject_Line: subjectLine,
+                            From_Name: from,
+                            Captcha_Position: captchaStatus,
+                            Success_Message: Message
+                            
+                        };
+                    });
+                    data.contactForm = formData;
+                }
+
+            } catch (error) {
+                logDebug('error', `Error in ContactForm for page ${data.Slug}:`, error);
             }
         }
         
