@@ -4,12 +4,20 @@ chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
   .catch((error) => console.error(error));
 
+
+// chrome.commands.onCommand.addListener((command) => {
+//     if (command === "toggle_newTab") {
+//       chrome.tabs.create({ url: "/html/sidepanel.html" });
+//     }
+// });
+
 // Listen for messages from the content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     try {
         if (message.action === "sendLinkData" && Array.isArray(message.data)) {
             linkDataFromContent = message.data;
             console.log("Link data received from content script:", linkDataFromContent);
+            chrome.tabs.create({ url: "/html/sidepanel.html" });
         } else {
             console.warn("Invalid message data received:", message);
         }
