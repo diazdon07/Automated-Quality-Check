@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Option</title>
+    <link rel="stylesheet" href="/css/stylesettings.css">
+    <link rel="stylesheet" href="/asset/bootstrap-5.0.2-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/asset/bootstrap-5.0.2-dist/css/bootstrap.css">
+    <script src="/asset/bootstrap-5.0.2-dist/js/bootstrap.min.js"></script>
+    <script src="/asset/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-2 bg-light sidebar">
+                <h2>Settings</h2>
+                <ul class="nav flex-column">
+                    <li class="nav-item"><a class="nav-link" href="#Checklist-Settings">Checklist Settings</a></li>
+                </ul>
+            </div>
+            <div class="col-10 main-content">
+                    <div class="container mt-5 checklist-container">
+                        <form id="settings-form">
+                            <div id="checklist-container" class="mb-3">
+                                <label for="checklist" class="form-label">Checklist</label>
+                                <!-- Checklist items will be dynamically added here -->
+                            </div>
+                            <button type="button" id="add-checklist" class="btn btn-primary mb-3">Add Checklist Item</button>
+                        </form>
+                    </div>
+            </div>
+        </div>
+    </div>
+    <script src="settings.js"></script>
+    
+</body>
+</html>
