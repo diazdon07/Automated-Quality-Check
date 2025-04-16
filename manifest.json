@@ -16,7 +16,9 @@
   "permissions": [
     "scripting", 
     "storage",
-    "sidePanel"
+    "sidePanel",
+    "activeTab",
+    "commands"
   ],
   "commands": {
     "toggle_newTab": {
@@ -25,6 +27,13 @@
         "mac": "Command+Shift+Q"
       },
       "description": "QC Information"
+    },
+    "show_link_checker": {
+      "suggested_key": {
+        "default": "Alt+Shift+W",
+        "mac": "Command+Shift+W"
+      },
+      "description": "View Links"
     }
   },
   "side_panel": {
