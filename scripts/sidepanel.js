@@ -1,4 +1,4 @@
-const port = chrome.runtime.connect({ name: "sidepanel" });
+// const port = chrome.runtime.connect({ name: "sidepanel" });
 
 // Add a loading overlay to the DOM
 const loadingOverlay = document.createElement('div');
@@ -27,7 +27,7 @@ function toggleLoadingOverlay(show) {
 }
 
 // Listen for messages from the background script
-port.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "updateLinkData") {
         toggleLoadingOverlay(true); // Show loading overlay
 
@@ -349,3 +349,4 @@ function initializeAccordion() {
 
 // Reinitialize accordion functionality for dynamically created elements
 initializeAccordion();
+
