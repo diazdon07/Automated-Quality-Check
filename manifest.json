@@ -21,13 +21,6 @@
     "commands"
   ],
   "commands": {
-    "toggle_newTab": {
-      "suggested_key": {
-        "default": "Alt+Shift+Q",
-        "mac": "Command+Shift+Q"
-      },
-      "description": "QC Information"
-    },
     "show_link_checker": {
       "suggested_key": {
         "default": "Alt+Shift+W",
