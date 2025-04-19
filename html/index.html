@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<style>
+body {
+  margin: 0px;
+}
+.check-item {
+  display: flex;
+  flex-wrap: nowrap;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0px;
+}
+div.container nav.header-tab {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  width: -webkit-fill-available;
+  border-bottom: 1px solid #ccc;
+}
+div.container nav.header-tab button {
+  border: none;
+  height: 50px;
+  width: -webkit-fill-available;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  font-size: 16px;
+}
+div.container nav.header-tab button.active-tab {
+  background-color: #007bff;
+  color: white;
+}
+section.bodyContainer {
+  margin: 10px;
+  display: none; /* Hide all sections by default */
+}
+section.bodyContainer.active {
+  display: block; /* Show the active section */
+}
+</style>
+<body>
+    <div class="container">
+        <nav class="header-tab">
+            <button class="nav-button" data-attr="onboarding">Onboarding Information</button>
+            <button class="nav-button" data-attr="social">Social Media</button>
+            <button class="nav-button" data-attr="cheatsheet">Cheat Sheet</button>
+            <button class="nav-button" data-attr="checklist">Checklist</button>
+        </nav>
+    </div>
+    <section class="bodyContainer" data-attr="onboarding">
+        <div class="locationBox">
+          <input type="text" id="searchLocation" placeholder="Search Location...">
+          <div class="previewlocation">
+
+          </div>
+        </div>
+        <button type="button">Generate Data</button>
+        <div class="onboardingInformation">
+        </div>
+    </section>
+    <section class="bodyContainer" data-attr="cheatsheet">
+        <div class="searhBar">
+          <input type="text" id="searchInput" placeholder="Search Script...">
+        </div>
+        <div class="cheatsheetdata">
+        </div>
+    </section>
+    <section class="bodyContainer" data-attr="social">
+        <div class="socialContainer">
+        </div>
+    </section>
+    <section class="bodyContainer" data-attr="checklist">
+        <div class="checklistInfo">
+        </div>
+    </section>
+</body>
+<script src="/scripts/navbar.js"></script>
+<script src="/scripts/location.js"></script>
+<script src="/scripts/cheatsheet.js"></script>
+<script src="/scripts/checklist.js"></script>
+</html>

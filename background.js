@@ -2,15 +2,18 @@ chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
   .catch((error) => console.error(error));
 
+// Command handler setup
 let commandFunctions = {
-    // "toggle_newTab": show_tab,
-    'show_link_checker': messageshow
+    "toggle_newTab": getDataFromWebsite,
+    "show_link_checker": messageshow
 };
 
 let linkDataFromContent = [];
 let sidePanelTabId = null;
 
-chrome.commands.onCommand.addListener(function (command) {
+// Handle keyboard shortcut commands
+chrome.commands.onCommand.addListener((command) => {
+    console.log(`Command received: ${command}`);
     if (commandFunctions[command]) {
         commandFunctions[command]();
     } else {
@@ -18,9 +21,10 @@ chrome.commands.onCommand.addListener(function (command) {
     }
 });
 
+// On tab update, check saved state
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete') {
-        chrome.storage.sync.get(["keyState", "openTab"], (data) => {
+        chrome.storage.sync.get(["keyState", "getData"], (data) => {
             if (chrome.runtime.lastError) {
                 console.error("Error retrieving storage data:", chrome.runtime.lastError.message);
                 return;
@@ -32,48 +36,55 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                 console.warn("keyState is not set in storage.");
             }
 
+            if (data.getData) {
+                console.log("getData State:", data.getData);
+            } else {
+                console.warn("getData is not set in storage.");
+            }
         });
     }
 });
 
+// Receive data from content scripts
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     try {
         if (message.action === "sendLinkData" && Array.isArray(message.data)) {
-            const linkDataFromContent = message.data;
+            linkDataFromContent = message.data;
             console.log("Link data received from content script:", linkDataFromContent);
 
-            // If side panel tab is already open, update it
             if (sidePanelTabId !== null) {
                 chrome.tabs.get(sidePanelTabId, (tab) => {
                     if (chrome.runtime.lastError || !tab) {
-                        // Tab not found (maybe closed), open new one
                         openSidePanel(linkDataFromContent);
                     } else {
-                        // Tab exists, send message to it
                         chrome.tabs.sendMessage(sidePanelTabId, {
                             action: "updateLinkData",
                             data: linkDataFromContent
+                        }, () => {
+                            if (chrome.runtime.lastError) {
+                                console.error("Error sending message to side panel:", chrome.runtime.lastError.message);
+                            }
                         });
                     }
                 });
             } else {
-                // No known tab, open new one
                 openSidePanel(linkDataFromContent);
             }
+        } else if (message.action === "getData") {
+            startProcessing(message.data === "show");
         } else {
-            console.warn("Invalid or unsupported message received:", message);
+            console.warn("Unsupported or invalid message:", message);
         }
     } catch (error) {
-        console.error("Error processing message from content script:", error);
+        console.error("Error in onMessage listener:", error);
     }
 });
 
-// Open side panel and save tab ID
+// Open side panel and inject data
 function openSidePanel(data) {
     chrome.tabs.create({ url: "/html/sidepanel.html" }, (tab) => {
         sidePanelTabId = tab.id;
 
-        // Wait for the tab to load, then send the data
         chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
             if (tabId === sidePanelTabId && info.status === "complete") {
                 chrome.tabs.sendMessage(tabId, {
@@ -86,6 +97,7 @@ function openSidePanel(data) {
     });
 }
 
+// Port connection (e.g., from side panel)
 chrome.runtime.onConnect.addListener((port) => {
     if (port.name === "sidepanel") {
         try {
@@ -98,7 +110,9 @@ chrome.runtime.onConnect.addListener((port) => {
     }
 });
 
+// Toggle keyState
 function messageshow() {
+    console.log("Executing messageshow function...");
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs.length === 0) {
             console.error("No active tab found.");
@@ -113,7 +127,32 @@ function messageshow() {
 
             const newState = data.keyState === "show" ? "hide" : "show";
             chrome.storage.sync.set({ keyState: newState }, () => {
-                chrome.tabs.sendMessage(tabs[0].id, { action: newState });
+                console.log(`Key state updated to: ${newState}`);
+                chrome.tabs.sendMessage(tabs[0].id, { action: "keyState", data: newState });
+            });
+        });
+    });
+}
+
+// Toggle getData and notify content script
+function getDataFromWebsite() {
+    console.log("Executing getDataFromWebsite function...");
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs.length === 0) {
+            console.error("No active tab found.");
+            return;
+        }
+
+        chrome.storage.sync.get("getData", (data) => {
+            if (chrome.runtime.lastError) {
+                console.error("Error retrieving getData:", chrome.runtime.lastError.message);
+                return;
+            }
+
+            const newState = data.getData === "show" ? "hide" : "show";
+            chrome.storage.sync.set({ getData: newState }, () => {
+                console.log(`getData updated to: ${newState}`);
+                chrome.tabs.sendMessage(tabs[0].id, { action: "getData", data: newState });
             });
         });
     });

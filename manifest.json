@@ -20,7 +20,17 @@
     "activeTab",
     "commands"
   ],
+  "host_permissions": [
+    "https://script.google.com/*"
+  ],
   "commands": {
+    "toggle_newTab": {
+      "suggested_key": {
+        "default": "Alt+Shift+Q",
+        "mac": "Command+Shift+Q"
+      },
+      "description": "QC Information"
+    },
     "show_link_checker": {
       "suggested_key": {
         "default": "Alt+Shift+W",
@@ -30,20 +40,14 @@
     }
   },
   "side_panel": {
-    "default_path": "/html/checklist.html"
+    "default_path": "/html/index.html"
   },
   "background": {
     "service_worker": "background.js",
     "type": "module"
   },
   "content_scripts" : [{
-    "matches" : [
-      "https://webbuilder.localsearch.com.au/home/site/*",
-      "https://webbuilder.localsearch.com.au/site/*",
-      "https://*.webbuilder.localsearch.com.au/*",
-      "http://*.webbuilder.localsearch.com.au/*",
-      "https://lsearch.lightning.force.com/lightning/*"
-      ],
+    "matches" : ["<all_urls>"],
     "js" : ["/scripts/content.js"],
     "css" : ["/css/style.css"],
     "run_at" : "document_idle"

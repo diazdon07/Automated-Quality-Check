@@ -1,28 +1,35 @@
-import checklist_Database from './checklistDatabase.js';
-    
-const checklistItems = checklist_Database.slice(1);
-    
-// Select the first element with the class 'checklistInfo'
 const checklistContainer = document.querySelector('.checklistInfo');
-const TabShowInfo = document.querySelector('.dataShow');
-    
-// Iterate over the checklist items and append them to the container
-checklistItems.forEach(item => {
-    const isChecked = item.a ? 'checked' : ''; // Add 'checked' if item.a is truthy
-    const checklistItemHTML = `
-        <input type="checkbox" name="${item.id}" ${isChecked} />
-        <label for="${item.id}">${item.q}</label><br>
-    `;
-    checklistContainer.innerHTML += checklistItemHTML; // Append the new item
-});
-chrome.tabs.query({active: true, currentWindow: true}, (tabs) =>{
-    chrome.storage.sync.get("openTab", (data) => {
-        if(data.openTab === 'show'){
-            const displayInfo = `Toggle On`;
-            TabShowInfo.innerHTML += displayInfo;
-            return;
-        } else {
-            return;
+
+fetch(urlApi)
+  .then(res => res.json())
+  .then(data => {
+    const grouped = {};
+
+    data['Checklist_question'].forEach((row) => {
+      const label = row[0]?.trim();
+      const category = row[1]?.trim();
+      
+      if (!label || !category) return;
+        if (!grouped[category]) {
+          grouped[category] = [];
         }
+        grouped[category].push(label);
     });
-});s
+      
+    for (const [category, items] of Object.entries(grouped)) {
+      const categoryTitle = `<h3>${category}</h3>`;
+      checklistContainer.innerHTML += categoryTitle;
+      
+      items.forEach((label, index) => {
+        const id = `check-${category}-${index}`;
+        const checklistItemHTML = `
+          <div class="check-item">
+            <input type="checkbox" id="${id}" name="${category}" value="${label}" />
+            <label for="${id}">${label}</label>
+          </div>
+        `;
+        checklistContainer.innerHTML += checklistItemHTML;
+      });
+    }
+  })
+.catch(err => console.error("Error reading sheet:", err));

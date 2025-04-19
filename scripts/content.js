@@ -25,7 +25,7 @@ if(site.includes("webbuilder.localsearch.com.au")){
         
             const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
         
-            async function processBatch(batchLinks) {
+            async function processBatch_brokenLink(batchLinks) {
                 const fetchPromises = batchLinks.map(async (link) => {
                     let url = link.href.split('/').pop();
                     let baseUrl = url.split('?')[0];
@@ -82,98 +82,8 @@ if(site.includes("webbuilder.localsearch.com.au")){
         
             for (let i = 0; i < links.length; i += batchSize) {
                 const batchLinks = links.slice(i, i + batchSize);
-                await processBatch(batchLinks);
+                await processBatch_brokenLink(batchLinks);
                 await delay(delayBetweenBatches);
-            }
-        }
-
-        async function processLinks() {
-            try {
-                async function checkLinks(allLinks, currentHost) {
-                    const delayBetweenRequests = 500; // Delay in milliseconds (adjust as needed)
-                    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-        
-                    for (const link of allLinks) {
-                        const url = new URL(link.href, window.location.origin);
-                        if (url.host === currentHost) {
-                            try {
-                                const Alias = url.pathname.split('/').pop() || 'home';
-                                // Skip processing if the Slug already exists
-                                if (linkData.some((item) => item.Slug === Alias)) {
-                                    logDebug('warn', `Skipping link as it already exists: ${Alias}`);
-                                    continue;
-                                }
-                                const response = await fetch(link.href);
-                                if (response.ok) {
-                                    addLocalPage(url);
-                                }
-                            } catch (error) {
-                                logDebug('error', 'Error fetching link:', { href: link.href, error });
-                            }
-                            await delay(delayBetweenRequests); // Add delay after each request
-                        }
-                    }
-                }
-        
-                // Call checkLinks to process all links
-                await checkLinks(allLinks, currentHost);
-        
-        
-                // Wait for all link fetches and data processing to complete
-                await Promise.all(
-                    linkData.map(async (data) => {
-                        try {
-                            const res = await fetch(data.Url).catch((error) => {
-                                logDebug('warn', `Failed to fetch ${data.Url}:`, error);
-                                data.BrokenLinks = (data.BrokenLinks || 0) + 1;
-                                return null;
-                            });
-        
-                            if (!res || !res.ok) {
-                                data.BrokenLinks = (data.BrokenLinks || 0) + 1;
-                                return;
-                            }
-        
-                            const text = await res.text();
-                            const parser = new DOMParser();
-                            const doc = parser.parseFromString(text, 'text/html');
-                            const title = doc.title;
-                            const meta_desc = doc.querySelector('meta[name="description"]');
-        
-                            data.Meta_Description = meta_desc ? meta_desc.getAttribute('content') : null;
-                            data.Meta_Title = title || data.Meta_Title;
-                            data.Slug = data.Slug || data.Meta_Title;
-                            data.Url = data.Url || data.Meta_Title;
-        
-                            if (!data.Meta_Title) {
-                                const index = linkData.findIndex(item => item.Slug === data.Slug);
-                                linkData.splice(index, 1);
-                                return;
-                            }
-        
-                            await docsCheck(data, doc)
-                                .then(() => getPerPageImage(data, doc))
-                                .then(() => getSVGImage(data, doc))
-                                .then(() => getHeaderType(data, doc)) 
-                                .then(() => checkAccordion(data, doc))
-                                .then(() => getContactForm(data, doc))        
-                                .then(() => getFooterType(data, doc))             
-                                .catch((error) => {
-                                    logDebug('error', `Error in docsCheck for page ${data.Slug}:`, error);
-                                });
-        
-                        } catch (error) {
-                            logDebug('error', `Error fetching link data for ${data.Slug}:`, error);
-                        }
-                    })
-                );
-        
-                logDebug('log', "All data processed. Sending link data to background...");
-                await sendLinkDataToBackground();
-                console.log("Link data sent to background:", linkData);
-        
-            } catch (error) {
-                logDebug('error', "Error in processLinks function:", error);
             }
         }
 
@@ -206,7 +116,9 @@ if(site.includes("webbuilder.localsearch.com.au")){
             });
             
             chrome.runtime.onMessage.addListener((message) => {
-                toggleDisplay(message.action === "show");
+                if(message.action === "keyState"){
+                    toggleDisplay(message.data === "show");
+                }
             });
         }
 
@@ -275,340 +187,446 @@ if(site.includes("webbuilder.localsearch.com.au")){
                 logDebug('warn', `Duplicate entry detected for Slug: ${Alias}. Skipping addition.`);
             }
         }
+
+        chrome.storage.sync.get("getData", (data) => {
+            startProcessing(data.getData === "show");
+        });
         
-        async function docsCheck(data, doc) {
-            try {
-                const links = Array.from(doc.querySelectorAll('a[href*="/site/"]'))
-                    .filter(link => !link.href.startsWith("tel:") && !link.href.startsWith("mailto:"));
-        
-                const batchSize = 10;
-                const delayBetweenBatches = 1000; // Increase delay to 1000ms (1 second) to reduce request frequency
-        
-                const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-        
-                async function processBatch(batchLinks) {
-                    const linkPromises = batchLinks.map(async (link) => {
-                        try {
-                            const res = await fetch(link.href, {
-                                method: 'GET',
-                                headers: {
-                                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        chrome.runtime.onMessage.addListener((message) => {
+            if (message.action === "getData") {
+                startProcessing(message.data === "show");
+            }
+        });        
+
+        function startProcessing(dataDisplay){
+            if(dataDisplay){
+                async function processLinks() {
+                    try {
+                        async function checkLinks(allLinks, currentHost) {
+                            const delayBetweenRequests = 500; // Delay in milliseconds (adjust as needed)
+                            const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+                
+                            for (const link of allLinks) {
+                                const url = new URL(link.href, window.location.origin);
+                                if (url.host === currentHost) {
+                                    try {
+                                        const Alias = url.pathname.split('/').pop() || 'home';
+                                        // Skip processing if the Slug already exists
+                                        if (linkData.some((item) => item.Slug === Alias)) {
+                                            logDebug('warn', `Skipping link as it already exists: ${Alias}`);
+                                            continue;
+                                        }
+                                        const response = await fetch(link.href);
+                                        if (response.ok) {
+                                            addLocalPage(url);
+                                        }
+                                    } catch (error) {
+                                        logDebug('error', 'Error fetching link:', { href: link.href, error });
+                                    }
+                                    await delay(delayBetweenRequests); // Add delay after each request
                                 }
-                            }).catch((error) => {
-                                logDebug('warn', `Failed to fetch ${link.href}:`, error);
-                                return null;
-                            });
-        
-                            if (!res || res.status === 404) {
-                                data.BrokenLinks = (data.BrokenLinks || 0) + 1;
-                                logDebug('warn', `Broken link (404) found on page ${data.Slug}: ${link.href}`);
-                                return;
-                            } else 
-                            if (res.ok) {
-                                if (link.href.includes('#')) {
-                                    const hashPart = link.href.split('#')[1]; // Fix: Use link.href instead of undefined 'url'
-        
-                                    const text = await res.text(); // Fix: Use 'res' instead of undefined 'response'
+                            }
+                        }
+                
+                        // Call checkLinks to process all links
+                        await checkLinks(allLinks, currentHost);
+                
+                
+                        // Wait for all link fetches and data processing to complete
+                        await Promise.all(
+                            linkData.map(async (data) => {
+                                try {
+                                    const res = await fetch(data.Url).catch((error) => {
+                                        logDebug('warn', `Failed to fetch ${data.Url}:`, error);
+                                        data.BrokenLinks = (data.BrokenLinks || 0) + 1;
+                                        return null;
+                                    });
+                
+                                    if (!res || !res.ok) {
+                                        data.BrokenLinks = (data.BrokenLinks || 0) + 1;
+                                        return;
+                                    }
+                
+                                    const text = await res.text();
                                     const parser = new DOMParser();
                                     const doc = parser.parseFromString(text, 'text/html');
-        
-                                    // Fix: Loop through anchor elements and check if the data-anchor matches
-                                    const anchors = Array.from(doc.querySelectorAll('[data-anchor]'));
-                                    const matchingAnchor = anchors.find(anchor => anchor.getAttribute('data-anchor') === hashPart);
-        
-                                    const anchorid = Array.from(doc.querySelectorAll('[id]'));
-                                    const matchingid = anchorid.find(anchorid => anchorid.id === hashPart);
-        
-                                    if (matchingAnchor || matchingid) {
+                                    const title = doc.title;
+                                    const meta_desc = doc.querySelector('meta[name="description"]');
+                
+                                    data.Meta_Description = meta_desc ? meta_desc.getAttribute('content') : null;
+                                    data.Meta_Title = title || data.Meta_Title;
+                                    data.Slug = data.Slug || data.Meta_Title;
+                                    data.Url = data.Url || data.Meta_Title;
+                
+                                    if (!data.Meta_Title) {
+                                        const index = linkData.findIndex(item => item.Slug === data.Slug);
+                                        linkData.splice(index, 1);
                                         return;
-                                    } else {
+                                    }
+                
+                                    await docsCheck(data, doc)
+                                        .then(() => getPerPageImage(data, doc))
+                                        .then(() => getSVGImage(data, doc))
+                                        .then(() => getHeaderType(data, doc)) 
+                                        .then(() => checkAccordion(data, doc))
+                                        .then(() => getContactForm(data, doc))        
+                                        .then(() => getFooterType(data, doc))             
+                                        .catch((error) => {
+                                            logDebug('error', `Error in docsCheck for page ${data.Slug}:`, error);
+                                        });
+                
+                                } catch (error) {
+                                    logDebug('error', `Error fetching link data for ${data.Slug}:`, error);
+                                }
+                            })
+                        );
+                
+                        logDebug('log', "All data processed. Sending link data to background...");
+                        await sendLinkDataToBackground();
+                        console.log("Link data sent to background:", linkData);
+                
+                    } catch (error) {
+                        logDebug('error', "Error in processLinks function:", error);
+                    }
+                }
+                
+                async function docsCheck(data, doc) {
+                    try {
+                        const links = Array.from(doc.querySelectorAll('a[href*="/site/"]'))
+                            .filter(link => !link.href.startsWith("tel:") && !link.href.startsWith("mailto:"));
+                
+                        const batchSize = 10;
+                        const delayBetweenBatches = 1000; // Increase delay to 1000ms (1 second) to reduce request frequency
+                
+                        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+                
+                        async function processBatch(batchLinks) {
+                            const linkPromises = batchLinks.map(async (link) => {
+                                try {
+                                    const res = await fetch(link.href, {
+                                        method: 'GET',
+                                        headers: {
+                                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                                        }
+                                    }).catch((error) => {
+                                        logDebug('warn', `Failed to fetch ${link.href}:`, error);
+                                        return null;
+                                    });
+                
+                                    if (!res || res.status === 404) {
                                         data.BrokenLinks = (data.BrokenLinks || 0) + 1;
-                                        logDebug('warn', `Broken link (anchor) found on page ${data.Slug}: ${link.href}`);
+                                        logDebug('warn', `Broken link (404) found on page ${data.Slug}: ${link.href}`);
+                                        return;
+                                    } else 
+                                    if (res.ok) {
+                                        if (link.href.includes('#')) {
+                                            const hashPart = link.href.split('#')[1]; // Fix: Use link.href instead of undefined 'url'
+                
+                                            const text = await res.text(); // Fix: Use 'res' instead of undefined 'response'
+                                            const parser = new DOMParser();
+                                            const doc = parser.parseFromString(text, 'text/html');
+                
+                                            // Fix: Loop through anchor elements and check if the data-anchor matches
+                                            const anchors = Array.from(doc.querySelectorAll('[data-anchor]'));
+                                            const matchingAnchor = anchors.find(anchor => anchor.getAttribute('data-anchor') === hashPart);
+                
+                                            const anchorid = Array.from(doc.querySelectorAll('[id]'));
+                                            const matchingid = anchorid.find(anchorid => anchorid.id === hashPart);
+                
+                                            if (matchingAnchor || matchingid) {
+                                                return;
+                                            } else {
+                                                data.BrokenLinks = (data.BrokenLinks || 0) + 1;
+                                                logDebug('warn', `Broken link (anchor) found on page ${data.Slug}: ${link.href}`);
+                                            }
+                                        }
                                     }
+                
+                                } catch (error) {
+                                    logDebug('error', `Error fetching link ${link.href}:`, error);
                                 }
-                            }
-        
-                        } catch (error) {
-                            logDebug('error', `Error fetching link ${link.href}:`, error);
+                            });
+                            await Promise.all(linkPromises);
                         }
-                    });
-                    await Promise.all(linkPromises);
-                }
-        
-                for (let i = 0; i < links.length; i += batchSize) {
-                    const batchLinks = links.slice(i, i + batchSize);
-                    await processBatch(batchLinks);
-                    await delay(delayBetweenBatches); // Add delay between batches
-                }
-        
-            } catch (error) {
-                logDebug('error', `Error in docsCheck for page ${data.Slug}:`, error);
-            }
-        }
-        
-        // Delay function (returns a promise that resolves after a given time in milliseconds)
-        const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-        
-        async function getPerPageImage(data, doc) {
-            try {
-                data.BannerImage = data.BannerImage || [];
-                data.SupportingImage = data.SupportingImage || [];
                 
-                // Wait for images to load if they are dynamically injected (e.g., lazy loading)
-                await delay(1000);  // Adjust delay time as needed
-        
-                // Process <img> elements with data-src attribute
-                const elements = Array.from(doc.querySelectorAll('img')); // Select only <img> with data-src
-        
-                elements.forEach((img, index) => {
-                    const datasrc = img.getAttribute('data-src');
-                    const src = datasrc || img.getAttribute('src');
-                    const alt = img.getAttribute('alt') || 'No alt text';
-                    
-                    if (src) {
-                        const imageObj = [
-                            { Url: src },
-                            { Alt: alt }];
-                        data.SupportingImage.push(imageObj);
+                        for (let i = 0; i < links.length; i += batchSize) {
+                            const batchLinks = links.slice(i, i + batchSize);
+                            await processBatch(batchLinks);
+                            await delay(delayBetweenBatches); // Add delay between batches
+                        }
+                
+                    } catch (error) {
+                        logDebug('error', `Error in docsCheck for page ${data.Slug}:`, error);
                     }
-                });
-        
-            } catch (error) {
-                logDebug('error', `Error in getPerPageImage for page ${data.Slug}:`, error);
-            }
-        }
-        
-        async function getSVGImage(data, doc) {
-            try {
-                const svgImages = Array.from(doc.querySelectorAll('svg'));
-                const svgImage = await Promise.all(svgImages.map((svg, index) => {
-                    const svgContent = svg.outerHTML;
-                    const titleElement = svg.querySelector('title');
-                    const title = titleElement ? titleElement.textContent : 'No Alt Text';
-                    return [{ Svg: svgContent },{ Alt: title }];
-                }));
-                data.SVGImage = svgImage;
+                }
                 
-            } catch (error) {
-                logDebug('error', `Error in getSVGImage for page ${data.Slug}:`, error);
-            }
-        }
-
-        async function getHeaderType(data, doc) {
-            try {
-                const scriptTags = Array.from(doc.querySelectorAll('script'));
-                const containsDeleteElements = scriptTags.some(script => script.textContent.includes('deleteElements()'));
-                const headersType = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
-
-                const headerData = headersType.flatMap(header => 
-                    Array.from(doc.querySelectorAll(header))
-                        .map(element => {
-                            if (containsDeleteElements && header === 'h3' && element.textContent.trim() === '') {
-                                return null;
-                            }
-                            return {
-                                type: header,
-                                text: element.textContent.trim()
-                            };
-                        })
-                        .filter(Boolean)
-                );
-
-                data.header = headerData;
-
-            } catch (error) {
-                logDebug('error', `Error in getHeaderType for page ${data.Slug}:`, error);
-            }
-        }
-
-        async function checkAccordion(data, doc) {
-            try {
-                const accordionContainers = Array.from(doc.querySelectorAll('[data-grab="accordion-container"]'));
-                const headersType = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
-                const headerData = accordionContainers.flatMap(container =>
-                    headersType.flatMap(header =>
-                        Array.from(container.querySelectorAll(header))
-                            .map(element => ({
-                                type: header,
-                                text: element.textContent.trim()
-                            }))
-                            .filter(Boolean)
-                    )
-                );
-                data.accordion = headerData;
-            } catch (error) {
-                logDebug('error', `Error in Accordion for page ${data.Slug}:`, error);
-            }
-        }
-
-        async function getFooterType(data, doc) {
-            try {
-                const footerContainers = Array.from(doc.getElementsByClassName('dmFooterContainer'));
-                const headersType = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
-                const headerData = footerContainers.flatMap(container =>
-                    headersType.flatMap(header =>
-                        Array.from(container.querySelectorAll(header)).map(element => ({
-                            type: header,
-                            text: element.textContent.trim()
-                        }))
-                    )
-                );
-                data.footer = headerData;
-            } catch (error) {
-                logDebug('error', `Error in Footer for page ${data.Slug}:`, error);
-            }
-        }
-        
-        async function getContactForm(data, doc) {
-            try {
-                const dmform = Array.from(doc.querySelectorAll('.dmform'));
-
-                if (dmform.length === 0) {
-                    data.contactForm = "No Contact Form";
-                    return;
-                } else {
-                    const formData = dmform.map(form => {
-                        const autoReplayInput = form.querySelector('input[name="dmformautoreplyenabled"]');
-                        const connectToData = form.getAttribute('data-binding');
-                        const captchaPosition = form.getAttribute('data-captcha-position');
-                        const emailSubjectLine = form.querySelector('input[name="dmformsubject"]');
-                        const fromName = form.querySelector('input[name="dmformfrom"]');
-                        const successDiv = form.querySelector(".dmform-success");
-    
-                        const fc = connectToData ? "Good" : "Not Connected To Data";
-                        const ar = autoReplayInput && autoReplayInput.value === "true" ? "Enabled" : "Disabled";
-                        const subjectLine = emailSubjectLine?.value?.trim() || "Empty";
-                        const from = fromName?.value?.trim() || "Empty";
-                        const captchaStatus = captchaPosition;
-                        const Message = successDiv.innerHTML.trim()
-    
-                        return {
-                            Connect_To_Data: fc,
-                            Auto_replay: ar,
-                            Email_Subject_Line: subjectLine,
-                            From_Name: from,
-                            Captcha_Position: captchaStatus,
-                            Success_Message: Message
+                // Delay function (returns a promise that resolves after a given time in milliseconds)
+                const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+                
+                async function getPerPageImage(data, doc) {
+                    try {
+                        data.BannerImage = data.BannerImage || [];
+                        data.SupportingImage = data.SupportingImage || [];
+                        
+                        // Wait for images to load if they are dynamically injected (e.g., lazy loading)
+                        await delay(1000);  // Adjust delay time as needed
+                
+                        // Process <img> elements with data-src attribute
+                        const elements = Array.from(doc.querySelectorAll('img')); // Select only <img> with data-src
+                
+                        elements.forEach((img, index) => {
+                            const datasrc = img.getAttribute('data-src');
+                            const src = datasrc || img.getAttribute('src');
+                            const alt = img.getAttribute('alt') || 'No alt text';
                             
-                        };
-                    });
-                    data.contactForm = formData;
-                }
-
-            } catch (error) {
-                logDebug('error', `Error in ContactForm for page ${data.Slug}:`, error);
-            }
-        }
-        
-        const sentDataHashes = new Set(); // Track hashes of sent data to prevent duplicates
-        
-        async function sendLinkDataToBackground() {
-            try {
-                if (linkData && Array.isArray(linkData) && linkData.length > 0) {
-                    const maxRetries = 1;
-                    let attempt = 0;
-                    let success = false;
-        
-                    while (attempt < maxRetries && !success) {
-                        attempt++;
-                        try {
-                            const uniqueData = linkData.filter((item, index, self) =>
-                                index === self.findIndex((t) => t.Slug === item.Slug)
-                            );
-        
-                            // Filter out already sent data
-                            const filteredData = uniqueData.filter(item => {
-                                const hash = JSON.stringify(item);
-                                if (sentDataHashes.has(hash)) {
-                                    logDebug('warn', `Skipping already sent data: ${item.Slug}`);
-                                    return false;
-                                }
-                                sentDataHashes.add(hash); // Mark data as sent
-                                return true;
-                            });
-        
-                            if (filteredData.length === 0) {
-                                logDebug('warn', "No new data to send. All data has already been sent.");
-                                return;
+                            if (src) {
+                                const imageObj = [
+                                    { Url: src },
+                                    { Alt: alt }];
+                                data.SupportingImage.push(imageObj);
                             }
-        
-                            await new Promise((resolve, reject) => {
-                                chrome.runtime.sendMessage({ action: "sendLinkData", data: filteredData }, (response) => {
-                                    if (chrome.runtime.lastError) {
-                                        reject(chrome.runtime.lastError.message);
-                                    } else {
-                                        logDebug('log', "Link data successfully sent to background:", response);
-                                        success = true;
-                                        resolve();
-                                    }
-                                });
-                            });
-                        } catch (error) {
-                            logDebug('warn', `Attempt ${attempt} failed to send link data:`, error);
-                            if (attempt === maxRetries) {
-                                logDebug('warn', "Max retries reached. Failed to send link data.");
-                            }
-                        }
+                        });
+                
+                    } catch (error) {
+                        logDebug('error', `Error in getPerPageImage for page ${data.Slug}:`, error);
                     }
-                } else {
-                    logDebug('warn', "No link data to send. The linkData array is empty or invalid.");
                 }
-            } catch (error) {
-                logDebug('error', "Error in sendLinkDataToBackground function:", error);
-            }
-        }
+                
+                async function getSVGImage(data, doc) {
+                    try {
+                        const svgImages = Array.from(doc.querySelectorAll('svg'));
+                        const svgImage = await Promise.all(svgImages.map((svg, index) => {
+                            const svgContent = svg.outerHTML;
+                            const titleElement = svg.querySelector('title');
+                            const title = titleElement ? titleElement.textContent : 'No Alt Text';
+                            return [{ Svg: svgContent },{ Alt: title }];
+                        }));
+                        data.SVGImage = svgImage;
+                        
+                    } catch (error) {
+                        logDebug('error', `Error in getSVGImage for page ${data.Slug}:`, error);
+                    }
+                }
         
-        function showLoadingPopup(message = "🔄 Loading...") {
-            let loader = document.getElementById("custom-loading-popup");
+                async function getHeaderType(data, doc) {
+                    try {
+                        const scriptTags = Array.from(doc.querySelectorAll('script'));
+                        const containsDeleteElements = scriptTags.some(script => script.textContent.includes('deleteElements()'));
+                        const headersType = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
         
-            if (!loader) {
-                loader = document.createElement("div");
-                loader.id = "custom-loading-popup";
-                loader.textContent = message;
+                        const headerData = headersType.flatMap(header => 
+                            Array.from(doc.querySelectorAll(header))
+                                .map(element => {
+                                    if (containsDeleteElements && header === 'h3' && element.textContent.trim() === '') {
+                                        return null;
+                                    }
+                                    return {
+                                        type: header,
+                                        text: element.textContent.trim()
+                                    };
+                                })
+                                .filter(Boolean)
+                        );
         
-                Object.assign(loader.style, {
-                    position: "fixed",
-                    top: "20px",
-                    right: "20px",
-                    backgroundColor: "#343a40",
-                    color: "#fff",
-                    padding: "12px 20px",
-                    borderRadius: "8px",
-                    fontFamily: "sans-serif",
-                    fontSize: "14px",
-                    zIndex: "9999",
-                    opacity: "0",
-                    transition: "opacity 0.4s ease-in-out",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.25)"
-                });
+                        data.header = headerData;
         
-                document.body.appendChild(loader);
+                    } catch (error) {
+                        logDebug('error', `Error in getHeaderType for page ${data.Slug}:`, error);
+                    }
+                }
         
-                // Fade in
-                requestAnimationFrame(() => {
-                    loader.style.opacity = "1";
-                });
+                async function checkAccordion(data, doc) {
+                    try {
+                        const accordionContainers = Array.from(doc.querySelectorAll('[data-grab="accordion-container"]'));
+                        const headersType = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+                        const headerData = accordionContainers.flatMap(container =>
+                            headersType.flatMap(header =>
+                                Array.from(container.querySelectorAll(header))
+                                    .map(element => ({
+                                        type: header,
+                                        text: element.textContent.trim()
+                                    }))
+                                    .filter(Boolean)
+                            )
+                        );
+                        data.accordion = headerData;
+                    } catch (error) {
+                        logDebug('error', `Error in Accordion for page ${data.Slug}:`, error);
+                    }
+                }
+        
+                async function getFooterType(data, doc) {
+                    try {
+                        const footerContainers = Array.from(doc.getElementsByClassName('dmFooterContainer'));
+                        const headersType = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+                        const headerData = footerContainers.flatMap(container =>
+                            headersType.flatMap(header =>
+                                Array.from(container.querySelectorAll(header)).map(element => ({
+                                    type: header,
+                                    text: element.textContent.trim()
+                                }))
+                            )
+                        );
+                        data.footer = headerData;
+                    } catch (error) {
+                        logDebug('error', `Error in Footer for page ${data.Slug}:`, error);
+                    }
+                }
+                
+                async function getContactForm(data, doc) {
+                    try {
+                        const dmform = Array.from(doc.querySelectorAll('.dmform'));
+        
+                        if (dmform.length === 0) {
+                            data.contactForm = "No Contact Form";
+                            return;
+                        } else {
+                            const formData = dmform.map(form => {
+                                const autoReplayInput = form.querySelector('input[name="dmformautoreplyenabled"]');
+                                const connectToData = form.getAttribute('data-binding');
+                                const captchaPosition = form.getAttribute('data-captcha-position');
+                                const emailSubjectLine = form.querySelector('input[name="dmformsubject"]');
+                                const fromName = form.querySelector('input[name="dmformfrom"]');
+                                const successDiv = form.querySelector(".dmform-success");
+            
+                                const fc = connectToData ? "Good" : "Not Connected To Data";
+                                const ar = autoReplayInput && autoReplayInput.value === "true" ? "Enabled" : "Disabled";
+                                const subjectLine = emailSubjectLine?.value?.trim() || "Empty";
+                                const from = fromName?.value?.trim() || "Empty";
+                                const captchaStatus = captchaPosition;
+                                const Message = successDiv.innerHTML.trim()
+            
+                                return {
+                                    Connect_To_Data: fc,
+                                    Auto_replay: ar,
+                                    Email_Subject_Line: subjectLine,
+                                    From_Name: from,
+                                    Captcha_Position: captchaStatus,
+                                    Success_Message: Message
+                                    
+                                };
+                            });
+                            data.contactForm = formData;
+                        }
+        
+                    } catch (error) {
+                        logDebug('error', `Error in ContactForm for page ${data.Slug}:`, error);
+                    }
+                }
+                
+                const sentDataHashes = new Set(); // Track hashes of sent data to prevent duplicates
+                
+                async function sendLinkDataToBackground() {
+                    try {
+                        if (linkData && Array.isArray(linkData) && linkData.length > 0) {
+                            const maxRetries = 1;
+                            let attempt = 0;
+                            let success = false;
+                
+                            while (attempt < maxRetries && !success) {
+                                attempt++;
+                                try {
+                                    const uniqueData = linkData.filter((item, index, self) =>
+                                        index === self.findIndex((t) => t.Slug === item.Slug)
+                                    );
+                
+                                    // Filter out already sent data
+                                    const filteredData = uniqueData.filter(item => {
+                                        const hash = JSON.stringify(item);
+                                        if (sentDataHashes.has(hash)) {
+                                            logDebug('warn', `Skipping already sent data: ${item.Slug}`);
+                                            return false;
+                                        }
+                                        sentDataHashes.add(hash); // Mark data as sent
+                                        return true;
+                                    });
+                
+                                    if (filteredData.length === 0) {
+                                        logDebug('warn', "No new data to send. All data has already been sent.");
+                                        return;
+                                    }
+                
+                                    await new Promise((resolve, reject) => {
+                                        chrome.runtime.sendMessage({ action: "sendLinkData", data: filteredData }, (response) => {
+                                            if (chrome.runtime.lastError) {
+                                                reject(chrome.runtime.lastError.message);
+                                            } else {
+                                                logDebug('log', "Link data successfully sent to background:", response);
+                                                success = true;
+                                                resolve();
+                                            }
+                                        });
+                                    });
+                                } catch (error) {
+                                    logDebug('warn', `Attempt ${attempt} failed to send link data:`, error);
+                                    if (attempt === maxRetries) {
+                                        logDebug('warn', "Max retries reached. Failed to send link data.");
+                                    }
+                                }
+                            }
+                        } else {
+                            logDebug('warn', "No link data to send. The linkData array is empty or invalid.");
+                        }
+                    } catch (error) {
+                        logDebug('error', "Error in sendLinkDataToBackground function:", error);
+                    }
+                }
+                
+                function showLoadingPopup(message = "🔄 Loading...") {
+                    let loader = document.getElementById("custom-loading-popup");
+                
+                    if (!loader) {
+                        loader = document.createElement("div");
+                        loader.id = "custom-loading-popup";
+                        loader.textContent = message;
+                
+                        Object.assign(loader.style, {
+                            position: "fixed",
+                            top: "20px",
+                            right: "20px",
+                            backgroundColor: "#343a40",
+                            color: "#fff",
+                            padding: "12px 20px",
+                            borderRadius: "8px",
+                            fontFamily: "sans-serif",
+                            fontSize: "14px",
+                            zIndex: "9999",
+                            opacity: "0",
+                            transition: "opacity 0.4s ease-in-out",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.25)"
+                        });
+                
+                        document.body.appendChild(loader);
+                
+                        // Fade in
+                        requestAnimationFrame(() => {
+                            loader.style.opacity = "1";
+                        });
+                    } else {
+                        loader.textContent = message;
+                        loader.style.opacity = "1";
+                    }
+                }
+                
+                function hideLoadingPopup() {
+                    const loader = document.getElementById("custom-loading-popup");
+                    if (loader) {
+                        loader.style.opacity = "0";
+                        setTimeout(() => {
+                            if (loader.parentNode) loader.parentNode.removeChild(loader);
+                        }, 400);
+                    }
+                }
+                
+                (async () => {
+                    showLoadingPopup("⏳ Processing links...");
+                    await processLinks();
+                    hideLoadingPopup();
+                })();
             } else {
-                loader.textContent = message;
-                loader.style.opacity = "1";
+                return;
             }
         }
-        
-        function hideLoadingPopup() {
-            const loader = document.getElementById("custom-loading-popup");
-            if (loader) {
-                loader.style.opacity = "0";
-                setTimeout(() => {
-                    if (loader.parentNode) loader.parentNode.removeChild(loader);
-                }, 400);
-            }
-        }
-        
-        (async () => {
-            showLoadingPopup("⏳ Processing links...");
-            await processLinks();
-            hideLoadingPopup();
-        })();
 
         linkChecker();
         
