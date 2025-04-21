@@ -24,7 +24,7 @@ chrome.commands.onCommand.addListener((command) => {
 // On tab update, check saved state
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete') {
-        chrome.storage.sync.get(["keyState", "getData"], (data) => {
+        chrome.storage.sync.get(["keyState", "getData", "Slug"], (data) => {
             if (chrome.runtime.lastError) {
                 console.error("Error retrieving storage data:", chrome.runtime.lastError.message);
                 return;
@@ -40,6 +40,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
                 console.log("getData State:", data.getData);
             } else {
                 console.warn("getData is not set in storage.");
+            }
+
+            if (data.Slug){
+                console.log("Builder Slug:", data.Slug);
+            } else {
+                console.warn("Builder Slug is not set in storage.");
             }
         });
     }

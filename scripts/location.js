@@ -44,7 +44,6 @@ fetch(urlApi)
   .then(res => res.json())
   .then(data => {
     locationData = data['location_data']; // Save the full dataset
-    renderLocations(locationData); // Initially render all
   })
   .catch(err => console.error("Error reading sheet:", err));
 
