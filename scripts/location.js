@@ -31,7 +31,7 @@ function renderLocations(dataArray) {
     block.querySelector('.locationAddress').addEventListener('click', function () {
       const linkText = this.getAttribute('data-link');
       navigator.clipboard.writeText(linkText)
-        .then(() => console.log(`Location Link Copied: ${linkText}`))
+        .then(() => showPopup(`Google Location Link Copied!`))
         .catch(err => console.error('Failed to copy: ', err));
     });
 

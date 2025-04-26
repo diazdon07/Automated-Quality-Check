@@ -20,3 +20,27 @@ buttons.forEach((button) => {
 // Set the default active tab (optional)
 buttons[0].classList.add('active');
 sections[0].classList.add('active');
+
+function showPopup(message) {
+  let popup = document.createElement('div');
+  popup.textContent = message;
+  popup.style.position = 'fixed';
+  popup.style.top = '20px';
+  popup.style.left = '50%';
+  popup.style.transform = 'translateX(-50%)';
+  popup.style.background = '#4caf50';
+  popup.style.color = '#fff';
+  popup.style.padding = '10px 20px';
+  popup.style.borderRadius = '8px';
+  popup.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+  popup.style.zIndex = 9999;
+  popup.style.opacity = 1;
+  popup.style.transition = 'opacity 0.5s ease';
+
+  document.body.appendChild(popup);
+
+  setTimeout(() => {
+    popup.style.opacity = 0;
+    setTimeout(() => document.body.removeChild(popup), 500);
+  }, 1500);
+}

@@ -19,6 +19,7 @@ fetch(urlApi)
 
         navigator.clipboard.writeText(script).then(() => {
           console.log(`Script Copied: ${script}`);
+          showPopup(`${label} Script Copied!`);
         }).catch(err => {
           console.error('Failed to copy: ', err);
         });
