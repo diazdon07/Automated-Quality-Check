@@ -1,6 +1,24 @@
 const generate = document.getElementById('generateData');
+
+const elementTable = document.querySelectorAll('table.table');
+const onboardingTab = document.querySelectorAll('a.subTab');
+
 const onboardingdata = document.getElementById('onboardingData');
-const sitemap = document.getElementById('sitemapInformation');
+const sitemap = document.getElementById('sitemapData');
+
+onboardingTab.forEach((button) => {
+  button.addEventListener('click', (event) => {
+    onboardingTab.forEach((btn) => btn.classList.remove('active'));
+    elementTable.forEach((section) => section.classList.remove('active'));
+
+    const activeAttr = event.target.getAttribute('data-attr');
+    event.target.classList.add('active');
+    document.querySelector(`table[data-attr="${activeAttr}"]`).classList.add('active');
+  });
+});
+
+onboardingTab[0].classList.add('active');
+elementTable[0].classList.add('active');
 
 generate.addEventListener('click', (event) => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {

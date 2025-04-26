@@ -32,6 +32,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         toggleLoadingOverlay(true); // Show loading overlay
 
         const linkDataList = document.getElementById("linkDataList");
+        const menuList = document.getElementById("sidemenu");
+        menuList.innerHTML = "";
         linkDataList.innerHTML = ""; // Clear existing data
 
         // Populate the list with link data
@@ -201,8 +203,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         }
 
                         return `
-                            <div class="contactFormContainer" style="padding: 10px; background-color: white; border: 2px solid ${warning}; border-radius: 20px;">
-                                <h4>Contact Form ${index}</h4>
+                            <div class="contactFormContainer card" style="padding: 10px; background-color: white; border: 2px solid ${warning}; border-radius: 20px;">
+                                <h4>Contact Form ${++index}</h4>
                                 <p><strong>Auto Replay:</strong> ${autoReplay}</p>
                                 <p><strong>Captcha Position:</strong> ${reCaptchaPosition}</p>
                                 <p><strong>Connect To Data:</strong> ${connectToData}</p>
@@ -225,19 +227,33 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const accordionHtml = await displayAccordion;
             const contactFormHtml = await displayContactForm;
 
+            menuList.innerHTML += `
+            <li class="nav-item">
+                <a class="nav-link" aria-current="${item.Slug} Slug Name" href="#" data-attr="${item.Slug}">${item.Slug}</a>
+            </li>
+            `;
+
             linkDataList.innerHTML += `
-                <button class="accordion">
-                    <h3>${item.Slug}</h3>
-                </button>
-                <div class="panel">
-                    <div class="containerHeader">
+                <div class="panel" data-attr="${item.Slug}">
+                    <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                            <a class="nav-link tabClass active-tab" href="#" data-attr="tab0-${index}">Page Info</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link tabClass" href="#" data-attr="tab1-${index}">Supporting Image</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link tabClass" href="#" data-attr="tab2-${index}">Icon</a>
+                        </li>
+                    </ul>
+                    <div class="containerHeader" id="tab0-${index}" style="display: flex;">
                         <div class="containerCard">
-                            <p><strong>Meta Title :</strong> ${item.Meta_Title}</p>
-                            <p><strong>Meta Description :</strong> ${item.Meta_Description || 'N/A'}</p>
-                            <p><strong>URL :</strong> ${item.Url || 'N/A'}</p>
-                            <p><strong>Broken Links :</strong> ${item.BrokenLinks || 0}</p>
+                            <strong>Meta Title :</strong><p>${item.Meta_Title}</p>
+                            <strong>Meta Description :</strong><p>${item.Meta_Description || 'N/A'}</p>
+                            <strong>URL :</strong><p style="overflow-wrap:break-word;white-space:normal;">${item.Url || 'N/A'}</p>
+                            <strong>Broken Links :</strong><p>${item.BrokenLinks || 0}</p>
                         </div>
-                        <div class="containerCard">
+                        <div class="containerCard headerSEO">
                             <p><strong>SEO Header :</strong></p>
                             ${seoHtml.join('')}
                         </div>
@@ -251,12 +267,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                             ${contactFormHtml.join('')}
                         </div>
                     </div>
-                    <div class="tabheader">
-                        <button class="tabClass" data-attr="tab1-${index}">Supporting Image</button>
-                        <button class="tabClass" data-attr="tab3-${index}">Icon</button>    
-                    </div>
-                    <div class="container" id="tab1-${index}" style="display: none; flex-wrap: wrap; gap: 10px; margin: 15px 0px; justify-content: center; align-content: center;">${imagesHtml.join('')}</div>
-                    <div class="container" id="tab3-${index}" style="display: none; flex-wrap: wrap; gap: 10px; margin: 15px 0px; justify-content: center; align-content: center;">${(svgHtml).join('')}</div>
+                    <div class="container-fluid" id="tab1-${index}" style="display: none; flex-wrap: wrap; gap: 10px; margin: 20px 0px; justify-content: center; align-content: center;">${imagesHtml.join('')}</div>
+                    <div class="container-fluid" id="tab2-${index}" style="display: none; flex-wrap: wrap; gap: 10px; margin: 20px 0px; justify-content: center; align-content: center;">${(svgHtml).join('')}</div>
                 </div>
             `;
         })).then(() => {
@@ -326,27 +338,22 @@ function showTab(event) {
 }
 
 function initializeAccordion() {
-    const acc = document.getElementsByClassName("accordion");
-    for (let i = 0; i < acc.length; i++) {
-        acc[i].addEventListener("click", function () {
-            // Toggle between adding and removing the "active" class
-            this.classList.toggle("active");
+    const menu = document.querySelectorAll("#sidemenu .nav-link");
 
-            // Toggle between hiding and showing the active panel
-            const panel = this.nextElementSibling;
-            if (panel) { // Ensure the panel exists
-                if (panel.style.display === "block") {
-                    panel.style.display = "none";
-                } else {
+    menu.forEach((item) => {
+        item.addEventListener("click", function () {
+            const attr = this.getAttribute("data-attr");
+            const panels = document.querySelectorAll(`.panel`);
+            panels.forEach((panel) => {
+                if (panel.getAttribute("data-attr") === attr) {
                     panel.style.display = "block";
+                } else {
+                    panel.style.display = "none";
                 }
-            } else {
-                console.warn("No panel found for this accordion.");
-            }
+            });
         });
-    }
+    });
 }
 
 // Reinitialize accordion functionality for dynamically created elements
 initializeAccordion();
-

@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Automated Quality Check</title>
+    <script src="/asset/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="/asset/bootstrap-5.0.2-dist/css/bootstrap.min.css">
+    <script src="/asset/bootstrap-5.0.2-dist/js/bootstrap.min.js"></script>
 </head>
 <style>
 body{
@@ -52,12 +55,11 @@ h1,h2,h3,h4,h5,h6,p{
 }
 .containerCard{
   width: 25%;
-  padding: 10px 20px;
-  background-color: #f1f1f1;
 }
 .containerHeader{
   display: inline-flex;
   width: -webkit-fill-available;
+  gap: 1%;
 }
 
 .contactFormContainer{
@@ -66,9 +68,51 @@ h1,h2,h3,h4,h5,h6,p{
   border: 1px solid;
   border-radius: 20px;
 }
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: row;
+}
+
+/* Side Panels */
+.layout .side-panel {
+  background-color: #f0f0f0;
+  box-shadow: inset -1px 0 0 #ddd;
+}
+
+.layout .left-panel {
+  order: 0;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  min-height: 85vh;
+}
+
+/* Main Content */
+.layout .main-content {
+  flex: 1;
+  padding: 1rem;
+  background-color: #fff;
+  order: 1;
+  overflow-x: hidden;
+  height: 100vh;
+  overflow-y: scroll;
+}
+ul#sidemenu {
+  min-height: 100vh;
+}
 </style>
 <body>
-    <div id="linkDataList"></div>
+  <div class="layout">
+    <div class="side-panel left-panel">
+      <ul class="nav flex-column" id="sidemenu">
+      </ul>
+    </div>
+    <div id="linkDataList" class="main-content"></div>
+  </div>
     <script src="/scripts/sidepanel.js"></script>
 </body>
 </html>

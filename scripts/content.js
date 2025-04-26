@@ -188,15 +188,19 @@ if(site.includes("webbuilder.localsearch.com.au")){
             }
         }
 
-        chrome.storage.sync.get("getData", (data) => {
-            startProcessing(data.getData === "show");
-        });
-        
-        chrome.runtime.onMessage.addListener((message) => {
+        let hasAlreadyHandled = false;
+
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             if (message.action === "getData") {
-                startProcessing(message.data === "show");
+                if (hasAlreadyHandled) {
+                    console.log("Already run get data information.");
+                    return;
+                }
+
+                hasAlreadyHandled = true; 
+                startProcessing(message.action === "getData");
             }
-        });        
+        }); 
 
         function startProcessing(dataDisplay){
             if(dataDisplay){

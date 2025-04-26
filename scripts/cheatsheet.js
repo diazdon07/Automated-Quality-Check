@@ -10,15 +10,15 @@ fetch(urlApi)
 
       const block = document.createElement('div');
       block.innerHTML = `
-        <h3 class="scriptTitle" style="cursor:pointer;" data-script="${script}">
+        <h3 class="scriptTitle" style="cursor:pointer;">
           ${label}
         </h3>
       `;
 
       block.querySelector('.scriptTitle').addEventListener('click', function () {
-        const scriptText = this.getAttribute('data-script');
-        navigator.clipboard.writeText(scriptText).then(() => {
-          console.log(`Script Copied: ${scriptText}`);
+
+        navigator.clipboard.writeText(script).then(() => {
+          console.log(`Script Copied: ${script}`);
         }).catch(err => {
           console.error('Failed to copy: ', err);
         });

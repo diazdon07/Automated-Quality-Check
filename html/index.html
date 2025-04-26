@@ -1,5 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <script src="/asset/jquery-3.7.1.min.js"></script>
+    <link rel="stylesheet" href="/asset/bootstrap-5.0.2-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/asset/datatables/datatables.min.css">
+    <link rel="stylesheet" href="/asset/datatables/datatables.css">
+    <script src="/asset/datatables/datatables.js"></script>
+    <script src="/asset/bootstrap-5.0.2-dist/js/bootstrap.min.js"></script>
+    <script src="/asset/datatables/datatables.min.js"></script>
+  </head>
 <style>
 body {
   margin: 0px;
@@ -32,7 +41,7 @@ div.container nav.header-tab button.active-tab {
   color: white;
 }
 section.bodyContainer {
-  margin: 10px;
+  padding-top: 10px !important;
   display: none; /* Hide all sections by default */
 }
 section.bodyContainer.active {
@@ -63,398 +72,105 @@ td.dateSection h3,
 td.dateSection p{
   text-align: center;
 }
-td, th {
-  border: 1px solid #5a5a5a;
-}
 .onboardingInformation{
   padding: 20px 0px;
 }
+.filterLocation{
+  box-shadow: 0 10px 16px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19) !important;
+}
+.filterLocation h3,
+.filterLocation p{
+  padding: 0px 10px;
+}
+table.active{
+  display: table !important;
+}
+table.table{
+  display: none;
+}
+
 </style>
 <body>
-    <div class="container">
-        <nav class="header-tab">
-            <button class="nav-button" data-attr="onboarding">Onboarding Information</button>
-            <button class="nav-button" data-attr="social">Social Media</button>
-            <button class="nav-button" data-attr="cheatsheet">Cheat Sheet</button>
-            <button class="nav-button" data-attr="checklist">Checklist</button>
-        </nav>
+    <div class="container-fluid">
+        <ul class="nav nav-tabs">
+          <li class="nav-item">
+            <a href="#" class="nav-link headerNav active" data-attr="onboarding">Onboarding Information</a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link headerNav" data-attr="social">Social Icon</a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link headerNav" data-attr="cheatsheet">Cheatsheet</a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link headerNav" data-attr="checklist">Checklist</a>
+          </li>
+        </ul>
     </div>
-    <section class="bodyContainer" data-attr="onboarding">
+    <section class="bodyContainer container-fluid" data-attr="onboarding">
         <div class="locationBox">
-          <input type="text" id="searchLocation" placeholder="Search Location...">
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1"><img src="/asset/icon/search.svg"></span>
+            <input type="text" class="form-control" id="searchLocation" placeholder="Search Location..." aria-label="Search Location" aria-describedby="basic-addon1">
+          </div>
           <div class="previewlocation">
           </div>
         </div>
-        <button type="button" id="generateData">Generate Data</button>
+        <button type="button" id="generateData" class="btn btn-success">Generate Data</button>
+        <ul class="nav nav-tabs" style="margin-top: 15px;">
+          <li class="nav-item">
+            <a href="#" class="nav-link subTab active" data-attr="business">Business Information</a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link subTab" data-attr="sitemap">Sitemap</a>
+          </li>
+        </ul>
         <div class="onboardingInformation">
-        <table id="onboardingTable">
-          <!-- <tbody>
-            <tr class="row">
-            <th class="questionSection"><h3>Business Name</h3></th>
-            <td class="answerSection"><p data-value="BusinessName">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="BusinessNameDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Website Action</h3></th>
-            <td class="answerSection"><p data-value="WebsiteAction">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="WebsiteActionDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>ABN</h3></th>
-            <td class="answerSection"><p data-value="ABN">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="ABNDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>ACN</h3></th>
-            <td class="answerSection"><p data-value="ACN">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="ACNDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Address</h3></th>
-            <td class="answerSection"><p data-value="Address">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="AddressDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>How would you like your address shown on your website/profile?</h3></th>
-            <td class="answerSection"><p data-value="Howwouldyoulikeyouraddressshownonyourwebsiteprofile">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="HowwouldyoulikeyouraddressshownonyourwebsiteprofileDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Primary Business Phone Number</h3></th>
-            <td class="answerSection"><p data-value="PrimaryBusinessPhoneNumber">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="PrimaryBusinessPhoneNumberDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Secondary Business Phone Number</h3></th>
-            <td class="answerSection"><p data-value="SecondaryBusinessPhoneNumber">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="SecondaryBusinessPhoneNumberDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Business Email Address</h3></th>
-            <td class="answerSection"><p data-value="BusinessEmailAddress">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="BusinessEmailAddressDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Would you like your email address displayed on your website?</h3></th>
-            <td class="answerSection"><p data-value="Wouldyoulikeyouremailaddressdisplayedonyourwebsite">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="WouldyoulikeyouremailaddressdisplayedonyourwebsiteDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Additional Email Address/es</h3></th>
-            <td class="answerSection"><p data-value="AdditionalEmailAddresses">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="AdditionalEmailAddressesDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Trading Hours</h3></th>
-            <td class="answerSection"><p data-value="TradingHours">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="TradingHoursDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Do you have any offers or deals you'd like showcased?</h3></th>
-            <td class="answerSection"><p data-value="Doyouhaveanyoffersordealsyoudlikeshowcased">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="DoyouhaveanyoffersordealsyoudlikeshowcasedDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>How would you like the deal or offers shown on your website?</h3></th>
-            <td class="answerSection"><p data-value="Howwouldyoulikethedealoroffersshownonyourwebsite">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="HowwouldyoulikethedealoroffersshownonyourwebsiteDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Do you have any memberships, accreditations and/or licenses?</h3></th>
-            <td class="answerSection"><p data-value="Doyouhaveanymembershipsaccreditationsandorlicenses">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="DoyouhaveanymembershipsaccreditationsandorlicensesDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Please provide your existing website URL</h3></th>
-            <td class="answerSection"><p data-value="PleaseprovideyourexistingwebsiteURL">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="PleaseprovideyourexistingwebsiteURLDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Please provide the link to your Facebook page</h3></th>
-            <td class="answerSection"><p data-value="PleaseprovidethelinktoyourFacebookpage">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="PleaseprovidethelinktoyourFacebookpageDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Please provide the link to your Instagram</h3></th>
-            <td class="answerSection"><p data-value="PleaseprovidethelinktoyourInstagram">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="PleaseprovidethelinktoyourInstagramDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Please provide the link to your Localsearch Business Profile</h3></th>
-            <td class="answerSection"><p data-value="PleaseprovidethelinktoyourLocalsearchBusinessProfile">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="PleaseprovidethelinktoyourLocalsearchBusinessProfileDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Please provide the link to your Google Business Profile</h3></th>
-            <td class="answerSection"><p data-value="PleaseprovidethelinktoyourGoogleBusinessProfile">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="PleaseprovidethelinktoyourGoogleBusinessProfileDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Please provide the link to your YouTube channel</h3></th>
-            <td class="answerSection"><p data-value="PleaseprovidethelinktoyourYouTubechannel">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="PleaseprovidethelinktoyourYouTubechannelDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Please provide the link to your TikTok profile</h3></th>
-            <td class="answerSection"><p data-value="PleaseprovidethelinktoyourTikTokprofile">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="PleaseprovidethelinktoyourTikTokprofileDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Please provide any other social links</h3></th>
-            <td class="answerSection"><p data-value="Pleaseprovideanyothersociallinks">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="PleaseprovideanyothersociallinksDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Website image source</h3></th>
-            <td class="answerSection"><p data-value="Websiteimagesource">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="WebsiteimagesourceDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Website stock image guide</h3></th>
-            <td class="answerSection"><p data-value="Websitestockimageguide">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="WebsitestockimageguideDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Would you like any brands or companies highlighted on every page?</h3></th>
-            <td class="answerSection"><p data-value="Wouldyoulikeanybrandsorcompanieshighlightedoneverypage">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="WouldyoulikeanybrandsorcompanieshighlightedoneverypageDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Do you have your frequently asked questions ready?</h3></th>
-            <td class="answerSection"><p data-value="Doyouhaveyourfrequentlyaskedquestionsready">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="DoyouhaveyourfrequentlyaskedquestionsreadyDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Please provide your frequently asked questions</h3></th>
-            <td class="answerSection"><p data-value="Pleaseprovideyourfrequentlyaskedquestions">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="PleaseprovideyourfrequentlyaskedquestionsDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Do you have testimonials?</h3></th>
-            <td class="answerSection"><p data-value="Doyouhavetestimonials">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="DoyouhavetestimonialsDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Would you like the testimonials shown on your Website to be automatically updated?</h3></th>
-            <td class="answerSection"><p data-value="WouldyoulikethetestimonialsshownonyourWebsitetobeautomaticallyupdated">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="WouldyoulikethetestimonialsshownonyourWebsitetobeautomaticallyupdatedDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Where would you like us to get the testimonials from?</h3></th>
-            <td class="answerSection"><p data-value="Wherewouldyoulikeustogetthetestimonialsfrom">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="WherewouldyoulikeustogetthetestimonialsfromDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Use Google as live testimonial source</h3></th>
-            <td class="answerSection"><p data-value="UseGoogleaslivetestimonialsource">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="UseGoogleaslivetestimonialsourceDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Use Localsearch as live testimonial source</h3></th>
-            <td class="answerSection"><p data-value="UseLocalsearchaslivetestimonialsource">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="UseLocalsearchaslivetestimonialsourceDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Use Facebook as live testimonial source</h3></th>
-            <td class="answerSection"><p data-value="UseFacebookaslivetestimonialsource">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="UseFacebookaslivetestimonialsourceDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Use TripAdvisor as live testimonial source</h3></th>
-            <td class="answerSection"><p data-value="UseTripAdvisoraslivetestimonialsource">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="UseTripAdvisoraslivetestimonialsourceDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Do you want to choose any specific stock images for your site?</h3></th>
-            <td class="answerSection"><p data-value="Doyouwanttochooseanyspecificstockimagesforyoursite">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="DoyouwanttochooseanyspecificstockimagesforyoursiteDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Are there multiple locations?</h3></th>
-            <td class="answerSection"><p data-value="Aretheremultiplelocations">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="AretheremultiplelocationsDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>If there are multiple location pages, do all locations offer the same services, products &amp; facilities?</h3></th>
-            <td class="answerSection"><p data-value="Iftherearemultiplelocationpagesdoalllocationsofferthesameservicesproductsfacilities">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="IftherearemultiplelocationpagesdoalllocationsofferthesameservicesproductsfacilitiesDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>If there are multiple locations please advise of any differences in contact details</h3></th>
-            <td class="answerSection"><p data-value="Iftherearemultiplelocationspleaseadviseofanydifferencesincontactdetails">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="IftherearemultiplelocationspleaseadviseofanydifferencesincontactdetailsDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>If there are multiple location pages, how would you like your address shown on the location pages?</h3></th>
-            <td class="answerSection"><p data-value="Iftherearemultiplelocationpageshowwouldyoulikeyouraddressshownonthelocationpages">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="IftherearemultiplelocationpageshowwouldyoulikeyouraddressshownonthelocationpagesDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Notes for the Developer</h3></th>
-            <td class="answerSection"><p data-value="NotesfortheDeveloper">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="NotesfortheDeveloperDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>301 Redirects</h3></th>
-            <td class="answerSection"><p data-value="301Redirects">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="301RedirectsDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Primary Accent Colour Hex Code</h3></th>
-            <td class="answerSection"><p data-value="PrimaryAccentColourHexCode">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="PrimaryAccentColourHexCodeDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Secondary Accent Colour Hex Code</h3></th>
-            <td class="answerSection"><p data-value="SecondaryAccentColourHexCode">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="SecondaryAccentColourHexCodeDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Tertiary Accent Colour Hex Code</h3></th>
-            <td class="answerSection"><p data-value="TertiaryAccentColourHexCode">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="TertiaryAccentColourHexCodeDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Website Theme</h3></th>
-            <td class="answerSection"><p data-value="WebsiteTheme">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="WebsiteThemeDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Is the client having dynamic pages?</h3></th>
-            <td class="answerSection"><p data-value="Istheclienthavingdynamicpages">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="IstheclienthavingdynamicpagesDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>If a CSV is not being provided prior to build please list one product details below</h3></th>
-            <td class="answerSection"><p data-value="IfaCSVisnotbeingprovidedpriortobuildpleaselistoneproductdetailsbelow">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="IfaCSVisnotbeingprovidedpriortobuildpleaselistoneproductdetailsbelowDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>What payment options do you offer?</h3></th>
-            <td class="answerSection"><p data-value="Whatpaymentoptionsdoyouoffer">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="WhatpaymentoptionsdoyouofferDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Does the client want prices shown on their catalogue store?</h3></th>
-            <td class="answerSection"><p data-value="Doestheclientwantpricesshownontheircataloguestore">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="DoestheclientwantpricesshownontheircataloguestoreDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Is the client having Localsearch Chat?</h3></th>
-            <td class="answerSection"><p data-value="IstheclienthavingLocalsearchChat">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="IstheclienthavingLocalsearchChatDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Email for chat</h3></th>
-            <td class="answerSection"><p data-value="Emailforchat">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="EmailforchatDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Display name for chat</h3></th>
-            <td class="answerSection"><p data-value="Displaynameforchat">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="DisplaynameforchatDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Collect contact info: Name</h3></th>
-            <td class="answerSection"><p data-value="CollectcontactinfoName">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="CollectcontactinfoNameDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Collect contact info: Phone Number</h3></th>
-            <td class="answerSection"><p data-value="CollectcontactinfoPhoneNumber">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="CollectcontactinfoPhoneNumberDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Collect contact info: Email</h3></th>
-            <td class="answerSection"><p data-value="CollectcontactinfoEmail">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="CollectcontactinfoEmailDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Is the client having Localsearch Bookings?</h3></th>
-            <td class="answerSection"><p data-value="IstheclienthavingLocalsearchBookings">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="IstheclienthavingLocalsearchBookingsDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Bookings</h3></th>
-            <td class="answerSection"><p data-value="Bookings">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="BookingsDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Number of booking users needed</h3></th>
-            <td class="answerSection"><p data-value="Numberofbookingusersneeded">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="NumberofbookingusersneededDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Booking Primary Users Full Name</h3></th>
-            <td class="answerSection"><p data-value="BookingPrimaryUsersFullName">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="BookingPrimaryUsersFullNameDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Bookings Primary Users Email</h3></th>
-            <td class="answerSection"><p data-value="BookingsPrimaryUsersEmail">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="BookingsPrimaryUsersEmailDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Booking Primary Users Hours</h3></th>
-            <td class="answerSection"><p data-value="BookingPrimaryUsersHours">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="BookingPrimaryUsersHoursDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Number of booking types</h3></th>
-            <td class="answerSection"><p data-value="Numberofbookingtypes">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="NumberofbookingtypesDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Is the client having dynamic pages?</h3></th>
-            <td class="answerSection"><p data-value="Istheclienthavingdynamicpages">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="IstheclienthavingdynamicpagesDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>What locations do you deliver to?</h3></th>
-            <td class="answerSection"><p data-value="Whatlocationsdoyoudeliverto">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="WhatlocationsdoyoudelivertoDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Do you offer in-store pick up?</h3></th>
-            <td class="answerSection"><p data-value="Doyouofferinstorepickup">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="DoyouofferinstorepickupDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>What shipping options do you offer?</h3></th>
-            <td class="answerSection"><p data-value="Whatshippingoptionsdoyouoffer">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="WhatshippingoptionsdoyouofferDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>What payment options do you offer?</h3></th>
-            <td class="answerSection"><p data-value="Whatpaymentoptionsdoyouoffer">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="WhatpaymentoptionsdoyouofferDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>Do you want a date and time calendar shown at checkout for pickup or delivery shipping options?</h3></th>
-            <td class="answerSection"><p data-value="Doyouwantadateandtimecalendarshownatcheckoutforpickupordeliveryshippingoptions">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="DoyouwantadateandtimecalendarshownatcheckoutforpickupordeliveryshippingoptionsDate">00-00-0000</p></td>
-          </tr>
-          <tr class="row">
-            <th class="questionSection"><h3>If a CSV is not being provided prior to build please list one product details below</h3></th>
-            <td class="answerSection"><p data-value="IfaCSVisnotbeingprovidedpriortobuildpleaselistoneproductdetailsbelow">placeholder</p></td>
-            <td class="dateSection"><h3>Date Last Update</h3><p data-date="IfaCSVisnotbeingprovidedpriortobuildpleaselistoneproductdetailsbelowDate">00-00-0000</p></td>
-          </tr>
-        </tbody> -->
+        <table class="table table-light table-hover active" data-attr="business" id="onboardingTable">
+          <thead>
+            <tr>
+              <th scope="col">Title</th>
+              <th scope="col">Details</th>
+              <th scope="col">Date</th>
+            </tr>
+          </thead>
+          <tbody id="onboardingData">
+              <!-- Data will be populated here -->
+          </tbody>
+        </table>
+        <table class="table table-light table-hover" data-attr="sitemap" id="sitemapTable">
+          <thead>
+            <tr>
+              <th scope="col">Page Name</th>
+              <th scope="col">Parent</th>
+              <th scope="col">Type</th>
+              <th scope="col">Date</th>
+            </tr>
+          </thead>
+          <tbody id="sitemapData">
+              <!-- Data will be populated here -->
+          </tbody>
         </table>
         </div>
     </section>
-    <section class="bodyContainer" data-attr="cheatsheet">
-        <div class="searhBar">
-          <input type="text" id="searchInput" placeholder="Search Script...">
-        </div>
-        <div class="cheatsheetdata">
-        </div>
+    <section class="bodyContainer container-fluid" data-attr="cheatsheet">
+      <div class="input-group mb-3">
+        <span class="input-group-text" id="basic-addon1"><img src="/asset/icon/search.svg"></span>
+        <input type="text" class="form-control" id="searchInput" placeholder="Search..." aria-label="Search" aria-describedby="basic-addon1">
+      </div>
+      <div class="cheatsheetdata">
+      
+      </div>
     </section>
-    <section class="bodyContainer" data-attr="social">
+    <section class="bodyContainer container-fluid" data-attr="social">
         <div class="socialContainer">
         </div>
     </section>
-    <section class="bodyContainer" data-attr="checklist">
+    <section class="bodyContainer container-fluid" data-attr="checklist">
+      <div class="input-group mb-3">
+        <span class="input-group-text" id="basic-addon1"><img src="/asset/icon/search.svg"></span>
+        <input type="text" class="form-control" id="searchList" placeholder="Search..." aria-label="Search List" aria-describedby="basic-addon1">
+      </div>
         <div class="checklistInfo">
         </div>
     </section>

@@ -148,18 +148,6 @@ function getDataFromWebsite() {
             console.error("No active tab found.");
             return;
         }
-
-        chrome.storage.sync.get("getData", (data) => {
-            if (chrome.runtime.lastError) {
-                console.error("Error retrieving getData:", chrome.runtime.lastError.message);
-                return;
-            }
-
-            const newState = data.getData === "show" ? "hide" : "show";
-            chrome.storage.sync.set({ getData: newState }, () => {
-                console.log(`getData updated to: ${newState}`);
-                chrome.tabs.sendMessage(tabs[0].id, { action: "getData", data: newState });
-            });
-        });
+        chrome.tabs.sendMessage(tabs[0].id, { action: "getData" });
     });
 }
