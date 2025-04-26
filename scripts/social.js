@@ -9,7 +9,7 @@ fetch(urlApi)
       let png = row[1]?.trim();
       let svg = row[2]?.trim();
       let alt = row[3]?.trim();
-      let key = row[4]?.trim();
+      let key = row[4]?.trim().toLowerCase();
 
       let div = document.createElement('div');
       div.classList.add('card', 'socialMediaCard');
@@ -44,3 +44,17 @@ fetch(urlApi)
     });
   })
   .catch(err => console.error("Error reading Social Icons:", err));
+
+  searchSocial.addEventListener('input', function () {
+    let searchTerm = this.value.toLowerCase();
+    let cardItems = socialContainer.querySelectorAll('.socialMediaCard');
+
+    cardItems.forEach(item => {
+      let keywords = item.getAttribute('key-data');
+      if (keywords.includes(searchTerm)) {
+        item.style.display = '';
+      } else {
+        item.style.display = 'none';
+      }
+    });
+  });
